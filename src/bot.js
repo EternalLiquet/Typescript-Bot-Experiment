@@ -16,11 +16,13 @@ const discord_js_1 = require("discord.js");
 const inversify_1 = require("inversify");
 const types_1 = require("./types");
 const message_responder_1 = require("./services/message-responder");
+const new_user_handler_1 = require("./services/new-user-handler");
 let Bot = class Bot {
-    constructor(client, token, messageResponder) {
+    constructor(client, token, messageResponder, newUserHandler) {
         this.client = client;
         this.token = token;
         this.messageResponder = messageResponder;
+        this.newUserHandler = newUserHandler;
     }
     listen() {
         this.client.on('message', (message) => {
@@ -35,6 +37,14 @@ let Bot = class Bot {
                 console.log('Response not sent for reason: ', error.message);
             });
         });
+        this.client.on('guildMemberAdd', (member) => {
+            console.log('User joined: ', member.displayName);
+            this.newUserHandler.handle(member).then(() => {
+                console.log('DM successfuly sent to user: ', member.displayName);
+            }).catch((error) => {
+                console.log('Unable to send DM for reason: ', error.message);
+            });
+        });
         return this.client.login(this.token);
     }
 };
@@ -43,7 +53,9 @@ Bot = __decorate([
     __param(0, inversify_1.inject(types_1.TYPES.Client)),
     __param(1, inversify_1.inject(types_1.TYPES.Token)),
     __param(2, inversify_1.inject(types_1.TYPES.MessageResponder)),
-    __metadata("design:paramtypes", [discord_js_1.Client, String, message_responder_1.MessageResponder])
+    __param(3, inversify_1.inject(types_1.TYPES.NewUserHandler)),
+    __metadata("design:paramtypes", [discord_js_1.Client, String, message_responder_1.MessageResponder,
+        new_user_handler_1.NewUserHandler])
 ], Bot);
 exports.Bot = Bot;
 //# sourceMappingURL=bot.js.map
